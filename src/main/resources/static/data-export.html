@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BudgetWise AI - Data Export & Advisor</title>
+    <style>
+        :root { --primary: #1e293b; --accent: #22c55e; --danger: #ef4444; --bg: #f3f4f6; --navy: #1e3a8a; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; padding: 20px; color: #334155; }
+        .container { max-width: 1100px; margin: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h2 { margin-top: 0; font-size: 1.3rem; border-bottom: 2px solid #eee; padding-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+
+        /* Export Table Style */
+        .table-scroll { max-height: 350px; overflow-y: auto; margin-top: 15px; border: 1px solid #e5e7eb; border-radius: 8px; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th { background: #f9fafb; padding: 12px; text-align: left; position: sticky; top: 0; font-size: 0.85rem; border-bottom: 2px solid #eee; }
+        td { padding: 12px; border-bottom: 1px solid #f3f4f6; font-size: 0.9rem; }
+
+        /* AI Agent Style */
+        .ai-status { background: var(--primary); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; position: relative; }
+        .badge { position: absolute; top: 15px; right: 15px; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; background: var(--accent); }
+        .ai-msg { font-size: 1rem; line-height: 1.5; color: #cbd5e1; }
+        .highlight { color: #4ade80; font-weight: bold; }
+
+        .btn { border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; transition: 0.3s; }
+        .btn-export { background: var(--accent); color: white; margin-top: 15px; }
+
+        .btn-back {
+            background: var(--navy);
+            color: white;
+            margin-top: 25px;
+            display: block;
+            text-align: center;
+            text-decoration: none;
+            font-size: 1rem;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .budget-tag { font-size: 0.75rem; color: #64748b; margin-top: 5px; display: block; }
+    </style>
+</head>
+<body>
+
+<h1 style="text-align: center; color: #1e293b;">Data Export & AI Advisor</h1>
+
+<div class="container">
+    <div class="card">
+        <h2>📥 Data Export Center</h2>
+        <div class="table-scroll">
+            <table>
+                <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Date</th>
+                    <th>Amount (₹)</th>
+                </tr>
+                </thead>
+                <tbody id="exportRows"></tbody>
+            </table>
+        </div>
+        <button class="btn btn-export" onclick="exportData()">Download Report (.CSV)</button>
+    </div>
+
+    <div class="card">
+        <h2>🤖 AI Financial Advisor</h2>
+        <div class="ai-status">
+            <div class="badge" id="aiBadge">LIVE ANALYSIS</div>
+            <p id="aiContent" class="ai-msg">Analyzing expenses against your budget plan...</p>
+        </div>
+
+        <div id="aiSuggestions" style="background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px dashed #cbd5e1;">
+            <h4 style="margin:0; color: #1e293b;">Budget Plan Insights</h4>
+            <p id="insightText" style="font-size: 0.9rem; margin-top: 8px;">Syncing with your Budget Plan...</p>
+        </div>
+
+        <a href="dashboard.html" class="btn-back">← Back to Dashboard</a>
+    </div>
+</div>
+
+<script>
+    // LocalStorage-il irunthu Expenses matrum Budget Plan-ai edukka
+    function getExpenses() { return JSON.parse(localStorage.getItem('expenses')) || []; }
+    function getBudgetPlan() { return JSON.parse(localStorage.getItem('budgets')) || []; }
+
+    function refreshPageData() {
+        const expenses = getExpenses();
+        const budgets = getBudgetPlan();
+        renderExportTable(expenses);
+        runAIAdvisor(expenses, budgets);
+    }
+
+    window.onfocus = refreshPageData;
+    window.onload = refreshPageData;
+
+    function renderExportTable(data) {
+        const tbody = document.getElementById('exportRows');
+        if (data.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='4' style='text-align:center'>No transactions found.</td></tr>";
+            return;
+        }
+        tbody.innerHTML = data.map(item => `
+            <tr>
+                <td>${item.title || item.name}</td>
+                <td>${item.category}</td>
+                <td>${item.date}</td>
+                <td style="font-weight: bold;">₹${item.amount}</td>
+            </tr>
+        `).join('');
+    }
+
+    function runAIAdvisor(expenses, budgets) {
+        // Category-wise spending-ai sum seiya
+        const spendingByCategory = expenses.reduce((acc, curr) => {
+            acc[curr.category] = (acc[curr.category] || 0) + parseFloat(curr.amount);
+            acc.total += parseFloat(curr.amount);
+            return acc;
+        }, { total: 0 });
+
+        const aiBox = document.getElementById('aiContent');
+        const insight = document.getElementById('insightText');
+        const badge = document.getElementById('aiBadge');
+
+        // AI Insight Logic
+        let alertMessages = [];
+        let isOverBudget = false;
+
+        // Budget Plan-il ulla ovvoru category-aiyum check seiya
+        budgets.forEach(plan => {
+            const spent = spendingByCategory[plan.category] || 0;
+            const limit = parseFloat(plan.limit);
+
+            if (spent > limit) {
+                isOverBudget = true;
+                alertMessages.push(`⚠️ <b>${plan.category}</b> limit (₹${limit}) exceeded! Spent: ₹${spent}.`);
+            } else if (spent > (limit * 0.8)) {
+                alertMessages.push(`🟡 <b>${plan.category}</b> you have used over 80% of your budget.`);
+            }
+        });
+
+        const remainingBalance = 50000 - spendingByCategory.total;
+
+        aiBox.innerHTML = `
+            Total Spent: <span class="highlight">₹${spendingByCategory.total}</span><br>
+            Current Balance: <span class="highlight">₹${remainingBalance}</span>
+        `;
+
+        if (isOverBudget) {
+            badge.style.background = "#ef4444";
+            badge.innerText = "OVER BUDGET";
+        } else {
+            badge.style.background = "#22c55e";
+            badge.innerText = "STABLE";
+        }
+
+        insight.innerHTML = alertMessages.length > 0
+            ? alertMessages.join("<br>")
+            : "✅ Your expense are aligned with your budget plan. Happy Saving!";
+    }
+
+    function exportData() {
+        const data = getExpenses();
+        if(data.length === 0) return alert("No data to export!");
+        let csv = "Title,Category,Date,Amount\n";
+        data.forEach(d => csv += `${d.title || d.name},${d.category},${d.date},${d.amount}\n`);
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'My_Budget_Full_Report.csv';
+        a.click();
+    }
+</script>
+
+</body>
+</html>

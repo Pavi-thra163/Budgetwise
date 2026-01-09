@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BudgetWise | Monthly Budget Plan</title>
+
+    <style>
+        body{
+            margin:0;
+            font-family:'Segoe UI',sans-serif;
+            background:#f4f6fb;
+        }
+
+        .container{
+            max-width:950px;
+            margin:40px auto;
+            background:white;
+            padding:25px;
+            border-radius:16px;
+            box-shadow:0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h2{
+            text-align:center;
+            color:#1e2a5a;
+            margin-bottom:20px;
+        }
+
+        .form{
+            display:grid;
+            grid-template-columns:repeat(4,1fr);
+            gap:15px;
+            margin-bottom:25px;
+        }
+
+        input,select{
+            padding:12px;
+            border-radius:6px;
+            border:1px solid #ccc;
+            font-size:15px;
+        }
+
+        button{
+            padding:12px;
+            border:none;
+            border-radius:6px;
+            cursor:pointer;
+            font-size:15px;
+        }
+
+        .add-btn{
+            background:#4caf50;
+            color:white;
+        }
+
+        .cards{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+            gap:20px;
+        }
+
+        .card{
+            background:#f9f9f9;
+            padding:18px;
+            border-radius:14px;
+            box-shadow:0 6px 14px rgba(0,0,0,0.08);
+            text-align:center;
+        }
+
+        .amount{
+            font-size:16px;
+            margin:6px 0;
+        }
+
+        .alert{ color:#f44336; font-weight:bold; }
+        .ok{ color:#2e7d32; font-weight:bold; }
+
+        .edit-btn{ background:#2196f3; color:white; }
+        .delete-btn{ background:#f44336; color:white; }
+
+        .back-btn{
+            margin-top:25px;
+            width:100%;
+            background:#1e2a5a;
+            color:white;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>Monthly Budget Plan</h2>
+
+    <!-- ADD BUDGET -->
+    <div class="form">
+        <input type="text" id="category" placeholder="Category (Food, Rent)">
+        <input type="number" id="limit" placeholder="Budget Limit ₹">
+
+        <select id="month">
+            <option value="">Month</option>
+            <option value="0">Jan</option>
+            <option value="1">Feb</option>
+            <option value="2">Mar</option>
+            <option value="3">Apr</option>
+            <option value="4">May</option>
+            <option value="5">Jun</option>
+            <option value="6">Jul</option>
+            <option value="7">Aug</option>
+            <option value="8">Sep</option>
+            <option value="9">Oct</option>
+            <option value="10">Nov</option>
+            <option value="11">Dec</option>
+        </select>
+
+        <input type="number" id="year" placeholder="Year (2026)">
+        <button class="add-btn" onclick="addBudget()">Add Budget</button>
+    </div>
+
+    <!-- CARDS -->
+    <div class="cards" id="budgetCards"></div>
+
+    <button class="back-btn" onclick="goDashboard()">Back to Dashboard</button>
+</div>
+
+<script>
+    let budgets = JSON.parse(localStorage.getItem("budgets")) || [];
+    let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+    let cards = document.getElementById("budgetCards");
+
+    function addBudget(){
+        let category = categoryInput.value.trim();
+        let limit = Number(limitInput.value);
+        let month = monthInput.value;
+        let year = Number(yearInput.value);
+
+        if(!category || limit<=0 || month==="" || !year){
+            alert("Fill all fields");
+            return;
+        }
+
+        budgets.push({ category, limit, month, year });
+        localStorage.setItem("budgets", JSON.stringify(budgets));
+        displayBudgets();
+
+        categoryInput.value="";
+        limitInput.value="";
+        monthInput.value="";
+        yearInput.value="";
+    }
+
+    const categoryInput = document.getElementById("category");
+    const limitInput = document.getElementById("limit");
+    const monthInput = document.getElementById("month");
+    const yearInput = document.getElementById("year");
+
+    function displayBudgets(){
+        cards.innerHTML="";
+        budgets.forEach((b,index)=>{
+
+            let spent = expenses.filter(e=>{
+                if(!e.date) return false;
+                let d = new Date(e.date);
+                return e.category === b.category &&
+                       d.getMonth() == b.month &&
+                       d.getFullYear() == b.year;
+            }).reduce((s,e)=>s+Number(e.amount),0);
+
+            let status = spent > b.limit
+                ? `<p class="alert">Exceeded by ₹${spent-b.limit}</p>`
+                : `<p class="ok">Remaining ₹${b.limit-spent}</p>`;
+
+            cards.innerHTML += `
+            <div class="card">
+                <h3>${b.category}</h3>
+                <p class="amount">Month: ${Number(b.month)+1}/${b.year}</p>
+                <p class="amount">Limit: ₹${b.limit}</p>
+                <p class="amount">Spent: ₹${spent}</p>
+                ${status}
+                <button class="edit-btn" onclick="editBudget(${index})">Edit</button>
+                <button class="delete-btn" onclick="deleteBudget(${index})">Delete</button>
+            </div>
+            `;
+        });
+    }
+
+    function editBudget(index){
+        let newLimit = prompt("Enter new budget limit", budgets[index].limit);
+        if(newLimit){
+            budgets[index].limit = Number(newLimit);
+            localStorage.setItem("budgets",JSON.stringify(budgets));
+            displayBudgets();
+        }
+    }
+
+    function deleteBudget(index){
+        if(confirm("Delete this budget?")){
+            budgets.splice(index,1);
+            localStorage.setItem("budgets",JSON.stringify(budgets));
+            displayBudgets();
+        }
+    }
+
+    function goDashboard(){
+        window.location.href="dashboard.html";
+    }
+
+    displayBudgets();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BudgetWise | Login</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: "Segoe UI", Tahoma, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            background: linear-gradient(135deg, #0f172a, #020617);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-card {
+            width: 380px;
+            background: #e5e7eb;
+            padding: 30px;
+            border-radius: 14px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+
+        .logo {
+            text-align: center;
+            font-size: 26px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #475569;
+            margin-bottom: 25px;
+        }
+
+        label {
+            font-size: 14px;
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0 18px;
+            border-radius: 8px;
+            border: none;
+            outline: none;
+            background: #dbeafe;
+            font-size: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #1e3a8a;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        .footer-text {
+            margin-top: 18px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .footer-text a {
+            color: #1e3a8a;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .footer-text a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="login-card">
+    <div class="logo">💼 BudgetWise</div>
+    <div class="subtitle">Sign in to manage your finances</div>
+
+    <label>Email</label>
+    <input type="email" id="email" placeholder="name@example.com">
+
+    <label>Password</label>
+    <input type="password" id="password" placeholder="••••••••">
+
+    <button onclick="login()">Sign In</button>
+
+    <div class="footer-text">
+        Don’t have an account?
+        <a href="#">Sign up</a>
+    </div>
+</div>
+
+<script>
+    function login() {
+        const email = document.getElementById("email").value;
+        const password = document.getElementById("password").value;
+
+        if (email === "" || password === "") {
+            alert("Please enter email and password");
+            return;
+        }
+
+        // TEMPORARY frontend login (backend later connect pannalam)
+        window.location.href = "dashboard.html";
+    }
+</script>
+
+</body>
+</html>

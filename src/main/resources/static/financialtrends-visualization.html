@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BudgetWise | Trends</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --primary: #4361ee;
+            --bg: #f8f9fe;
+            --card-bg: #ffffff;
+            --text-main: #2b2d42;
+            --text-sub: #8d99ae;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h2 {
+            text-align: left;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* GRID SYSTEM */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .box {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.02);
+            transition: transform 0.2s ease;
+        }
+
+        .box:hover {
+            transform: translateY(-5px);
+        }
+
+        .box h3 {
+            margin: 0 0 15px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        canvas {
+            max-height: 220px !important;
+        }
+
+        /* BOTTOM SECTION */
+        .full-width {
+            margin-top: 10px;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+        }
+
+        .back-btn:hover {
+            background: #3046c4;
+            box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4);
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>📊 Financial Insights & Visualization</h2>
+
+    <div class="grid">
+        <div class="box">
+            <h3>Monthly Spending</h3>
+            <canvas id="monthlyChart"></canvas>
+        </div>
+
+        <div class="box">
+            <h3>Top Categories</h3>
+            <canvas id="categoryChart"></canvas>
+        </div>
+    </div>
+
+    <div class="box full-width">
+        <h3>Budget Utilization (Budget vs Expense)</h3>
+        <canvas id="budgetExpenseChart"></canvas>
+    </div>
+
+    <button class="back-btn" onclick="goDashboard()">
+        <span style="margin-right:8px;">←</span> Back to Dashboard
+    </button>
+</div>
+
+<script>
+    // Data Logic remains exactly the same as requested
+    let expenses = JSON.parse(localStorage.getItem("expenses")) || [];
+    let budgets  = JSON.parse(localStorage.getItem("budgets")) || [];
+
+    /* MONTHLY */
+    let monthTotals={};
+    expenses.forEach(e=>{
+        if(!e.date) return;
+        let m=new Date(e.date).toLocaleString('default',{month:'short'});
+        monthTotals[m]=(monthTotals[m]||0)+Number(e.amount);
+    });
+
+    new Chart(monthlyChart,{
+        type:'line', // Changed to line for better look
+        data:{
+            labels:Object.keys(monthTotals),
+            datasets:[{
+                label: 'Expenses',
+                data:Object.values(monthTotals),
+                borderColor:'#4361ee',
+                backgroundColor: 'rgba(67, 97, 238, 0.1)',
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options:{
+            maintainAspectRatio:false,
+            plugins: { legend: { display: false } }
+        }
+    });
+
+    /* CATEGORY */
+    let catTotals={};
+    expenses.forEach(e=>{
+        catTotals[e.category]=(catTotals[e.category]||0)+Number(e.amount);
+    });
+
+    new Chart(categoryChart,{
+        type:'doughnut', // Changed to doughnut for variety
+        data:{
+            labels:Object.keys(catTotals),
+            datasets:[{
+                data:Object.values(catTotals),
+                backgroundColor:['#4361ee', '#4cc9f0', '#f72585', '#7209b7', '#ffb703'],
+                borderWidth: 0
+            }]
+        },
+        options:{
+            maintainAspectRatio:false,
+            cutout: '70%'
+        }
+    });
+
+    /* BUDGET vs EXPENSE */
+    let labels=[],budget=[],spent=[];
+    budgets.forEach(b=>{
+        labels.push(b.category);
+        budget.push(b.limit);
+        spent.push(
+            expenses.filter(e=>e.category===b.category)
+            .reduce((s,e)=>s+Number(e.amount),0)
+        );
+    });
+
+    new Chart(budgetExpenseChart,{
+        type:'bar',
+        data:{
+            labels,
+            datasets:[
+                {label:'Budget',data:budget,backgroundColor:'pink', borderRadius: 5},
+                {label:'Spent',data:spent,backgroundColor:'#4361ee', borderRadius: 5}
+            ]
+        },
+        options:{
+            maintainAspectRatio:false,
+            scales: {
+                y: { beginAtZero: true, grid: { display: false } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+
+    function goDashboard(){
+        window.location.href="dashboard.html";
+    }
+</script>
+
+</body>
+</html>

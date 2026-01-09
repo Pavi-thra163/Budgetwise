@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BudgetWise | Saving Goals</title>
+
+    <style>
+        body{
+            margin:0;
+            font-family:'Segoe UI',sans-serif;
+            background:#f4f6fb;
+        }
+
+        .container{
+            max-width:900px;
+            margin:40px auto;
+            background:white;
+            padding:25px;
+            border-radius:16px;
+            box-shadow:0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        h2{
+            text-align:center;
+            color:#1e2a5a;
+            margin-bottom:20px;
+        }
+
+        /* FORM */
+        .form{
+            display:grid;
+            grid-template-columns:repeat(3,1fr);
+            gap:15px;
+            margin-bottom:25px;
+        }
+
+        input{
+            padding:12px;
+            border-radius:6px;
+            border:1px solid #ccc;
+            font-size:15px;
+        }
+
+        button{
+            padding:12px;
+            border:none;
+            border-radius:6px;
+            cursor:pointer;
+            font-size:15px;
+        }
+
+        .add-btn{
+            background:#4caf50;
+            color:white;
+        }
+
+        /* CARDS */
+        .cards{
+            display:grid;
+            grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+            gap:20px;
+        }
+
+        .card{
+            background:#f9f9f9;
+            padding:18px;
+            border-radius:14px;
+            box-shadow:0 6px 14px rgba(0,0,0,0.08);
+        }
+
+        .card h3{
+            margin:0;
+            color:#1e2a5a;
+        }
+
+        .amount{
+            margin:6px 0;
+            font-size:15px;
+        }
+
+        /* PROGRESS */
+        .progress{
+            background:#ddd;
+            border-radius:10px;
+            overflow:hidden;
+            height:14px;
+            margin:10px 0;
+        }
+
+        .progress-bar{
+            height:100%;
+            background:#4caf50;
+        }
+
+        .card button{
+            margin:6px 4px;
+        }
+
+        .edit-btn{ background:#2196f3; color:white; }
+        .delete-btn{ background:#f44336; color:white; }
+
+        /* BACK */
+        .back-btn{
+            margin-top:25px;
+            width:100%;
+            background:#1e2a5a;
+            color:white;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h2>Saving Goals</h2>
+
+    <!-- ADD GOAL -->
+    <div class="form">
+        <input type="text" id="goalName" placeholder="Goal Name (Bike, Laptop)">
+        <input type="number" id="target" placeholder="Target Amount ₹">
+        <input type="number" id="saved" placeholder="Saved Amount ₹">
+        <button class="add-btn" onclick="addGoal()">Add Goal</button>
+    </div>
+
+    <!-- GOAL CARDS -->
+    <div class="cards" id="goalCards"></div>
+
+    <button class="back-btn" onclick="goDashboard()">Back to Dashboard</button>
+</div>
+
+<script>
+    let goals = JSON.parse(localStorage.getItem("goals")) || [];
+    let cards = document.getElementById("goalCards");
+
+    function addGoal(){
+        let name = goalName.value;
+        let target = Number(document.getElementById("target").value);
+        let saved = Number(document.getElementById("saved").value);
+
+        if(name=="" || target<=0 || saved<0){
+            alert("Enter valid details");
+            return;
+        }
+
+        goals.push({name,target,saved});
+        localStorage.setItem("goals",JSON.stringify(goals));
+        displayGoals();
+
+        goalName.value="";
+        target.value="";
+        saved.value="";
+    }
+
+    function displayGoals(){
+        cards.innerHTML="";
+        goals.forEach((g,index)=>{
+            let percent = Math.min((g.saved/g.target)*100,100);
+
+            cards.innerHTML += `
+            <div class="card">
+                <h3>${g.name}</h3>
+                <p class="amount">Target: ₹${g.target}</p>
+                <p class="amount">Saved: ₹${g.saved}</p>
+
+                <div class="progress">
+                    <div class="progress-bar" style="width:${percent}%"></div>
+                </div>
+                <p>${percent.toFixed(1)}% completed</p>
+
+                <button class="edit-btn" onclick="editGoal(${index})">Edit</button>
+                <button class="delete-btn" onclick="deleteGoal(${index})">Delete</button>
+            </div>
+            `;
+        });
+    }
+
+    function editGoal(index){
+        let newSaved = prompt("Enter new saved amount", goals[index].saved);
+        if(newSaved!==null){
+            goals[index].saved = Number(newSaved);
+            localStorage.setItem("goals",JSON.stringify(goals));
+            displayGoals();
+        }
+    }
+
+    function deleteGoal(index){
+        if(confirm("Delete this goal?")){
+            goals.splice(index,1);
+            localStorage.setItem("goals",JSON.stringify(goals));
+            displayGoals();
+        }
+    }
+
+    function goDashboard(){
+        window.location.href="dashboard.html";
+    }
+
+    displayGoals();
+</script>
+
+</body>
+</html>
